@@ -1,0 +1,24 @@
+{
+  "name": "Digital RT App",
+  "short_name": "DigitalRT",
+  "description": "Aplikasi Pengelolaan Kas, Jadwal, dan UMKM RT",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://www.google.com/imgres?q=ikon%20rumah&imgurl=https%3A%2F%2Fi.pinimg.com%2F1200x%2F0e%2F0d%2F11%2F0e0d11538b7d3e4128b5c6ea39fb3d10.jpg&imgrefurl=https%3A%2F%2Fid.pinterest.com%2Fpin%2F584553226630221712%2F&docid=iE3SOEYN6V_0JM&tbnid=o-AGf5jEnfqhoM&vet=12ahUKEwjnqd3_p6SVAxWF8DgGHU2-LygQnPAOegUIiwEQAA..i&w=640&h=640&hcb=2&ved=2ahUKEwjnqd3_p6SVAxWF8DgGHU2-LygQnPAOegUIiwEQAA",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://www.google.com/imgres?q=ikon%20rumah&imgurl=https%3A%2F%2Fi.pinimg.com%2F1200x%2F0e%2F0d%2F11%2F0e0d11538b7d3e4128b5c6ea39fb3d10.jpg&imgrefurl=https%3A%2F%2Fid.pinterest.com%2Fpin%2F584553226630221712%2F&docid=iE3SOEYN6V_0JM&tbnid=o-AGf5jEnfqhoM&vet=12ahUKEwjnqd3_p6SVAxWF8DgGHU2-LygQnPAOegUIiwEQAA..i&w=640&h=640&hcb=2&ved=2ahUKEwjnqd3_p6SVAxWF8DgGHU2-LygQnPAOegUIiwEQAA",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

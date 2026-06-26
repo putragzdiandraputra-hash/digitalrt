@@ -1,0 +1,953 @@
+<html lang="id">
+<head>
+    <meta name="theme-color" content="#030712">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Super RT</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome untuk Ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-item { animation: fadeInUp 0.4s ease-out forwards; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+        .animate-shake { animation: shake 0.2s ease-in-out 2; }
+
+        /* Efek Animasi Tombol Premium */
+        .btn-interaktif {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-interaktif:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+        .btn-interaktif:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="bg-gray-950 font-sans max-w-md mx-auto min-h-screen shadow-2xl flex flex-col relative text-white">
+
+    <!-- LAYER BACKGROUND DEGRADASI UTAMA -->
+    <div class="fixed inset-0 bg-gradient-to-b from-slate-900 via-gray-950 to-black z-0 pointer-events-none"></div>
+
+    <!-- ================= 🔔 NOTIFIKASI TOAST 🔔 ================= -->
+    <div id="toastNotification" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-80 max-w-[90%] transform -translate-y-24 opacity-0 transition-all duration-500 pointer-events-none">
+        <div id="toastBody" class="flex items-center space-x-3 p-4 rounded-xl shadow-2xl border backdrop-blur-md">
+            <div id="toastIcon" class="text-sm flex items-center justify-center w-6 h-6 rounded-full text-white"></div>
+            <div class="flex-1">
+                <p id="toastText" class="text-xs font-bold text-gray-900"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 📱 HALAMAN UTAMA ================= -->
+    <div id="home-screen" class="relative z-10 flex flex-col w-full min-h-screen overflow-y-auto pb-12">
+        
+        <!-- BLOCK 1: HEADER & LOGIN UTAMA -->
+        <div class="w-full bg-slate-900/40 backdrop-blur-md border-b border-white/5 p-5 flex justify-between items-center sticky top-0 z-30">
+            <div>
+                <h1 class="text-xl font-black tracking-wider text-white uppercase">DIGITAL RT</h1>
+                <p class="text-[9px] text-gray-400 mt-0.5 tracking-wide font-medium">Kemudahan dalam satu genggaman</p>
+            </div>
+            <button id="loginBtn" onclick="bukaModalLoginGoogle()" class="cursor-pointer bg-white/10 text-white border border-white/15 px-4 py-1.5 rounded-full text-xs font-bold shadow-sm hover:bg-white hover:text-black transition duration-300">
+                <i class="fas fa-sign-in-alt mr-1"></i> Login
+            </button>
+        </div>
+
+        <!-- BLOCK 2: SLIDER FOTO DOKUMENTER DARI GALERI -->
+        <div class="relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl mx-4 mt-5 h-48 flex flex-col justify-end group shrink-0">
+            <div id="netflix-slider" class="absolute top-0 left-0 w-full h-full transition-all duration-700 ease-in-out bg-cover bg-center"></div>
+            <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-gray-950 via-black/40 to-transparent z-10 pointer-events-none"></div>
+            
+            <div class="relative z-20 p-4 flex items-end justify-between w-full">
+                <div class="bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-xl max-w-[70%] border border-white/10">
+                    <p class="text-[9px] font-bold uppercase tracking-widest text-amber-400">Dokumentasi RT Terbaru</p>
+                    <p id="sliderCaption" class="text-xs text-gray-200 font-semibold truncate mt-0.5">Belum ada foto dokumentasi...</p>
+                </div>
+                <div class="flex space-x-1">
+                    <button onclick="geserSliderManual(-1)" class="w-6 h-6 bg-black/70 hover:bg-white hover:text-black rounded-full flex items-center justify-center text-[10px] transition border border-white/10 cursor-pointer"><i class="fas fa-chevron-left"></i></button>
+                    <button onclick="geserSliderManual(1)" class="w-6 h-6 bg-black/70 hover:bg-white hover:text-black rounded-full flex items-center justify-center text-[10px] transition border border-white/10 cursor-pointer"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL UPLOAD GAMBAR (KHUSUS PENGURUS) -->
+        <div id="boxKelolaFoto" class="px-4 mt-4 hidden">
+            <button onclick="togglePanelFoto()" class="w-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-400 text-xs py-2.5 rounded-xl font-bold flex items-center justify-center space-x-2 transition cursor-pointer">
+                <i class="fas fa-camera"></i> <span>Tambah Foto Dokumenter Baru</span>
+            </button>
+            
+            <div id="panelInputFoto" class="bg-slate-900/90 border border-white/10 p-4 rounded-xl mt-2 hidden space-y-3 text-left">
+                <div>
+                    <label class="text-[11px] text-gray-400 font-bold block mb-1">Nama Kegiatan / Judul:</label>
+                    <input type="text" id="inputCaptionFoto" placeholder="Nama Kegiatan / Rapat Warga" class="w-full p-2.5 bg-gray-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="text-[11px] text-gray-400 font-bold block mb-1">Pilih Berkas Foto:</label>
+                    <input type="file" id="inputFileDokumen" accept="image/*" class="hidden" onchange="handleFileTerpilih(this)">
+                    <div onclick="document.getElementById('inputFileDokumen').click()" class="w-full p-4 bg-gray-950 border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-amber-500 transition group">
+                        <i class="fas fa-images text-xl text-gray-500 group-hover:text-amber-400 mb-1"></i>
+                        <span id="labelNamaFile" class="text-[11px] text-gray-400 truncate max-w-xs">Klik untuk buka Galeri / File</span>
+                    </div>
+                </div>
+                <button onclick="simpanFotoBaru()" class="w-full bg-amber-500 hover:bg-amber-600 text-black font-black text-xs py-2.5 rounded-lg transition cursor-pointer">
+                    Publish Dokumentasi (Maks 5)
+                </button>
+            </div>
+        </div>
+
+        <!-- STATUS LOGIN -->
+        <div class="px-4 text-center mt-4">
+            <span id="txtStatusLogin" class="text-[10px] bg-white/5 border border-white/10 px-3 py-1 rounded-full text-gray-400">
+                Status: <strong class="text-amber-400">Belum Login (Mode Lihat)</strong>
+            </span>
+        </div>
+
+        <!-- MENU NAVIGASI GRID UTAMA -->
+        <div class="space-y-3.5 px-4 mt-6">
+            <!-- Kas Menu -->
+            <button onclick="openMenu('kas')" class="w-full bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-2xl flex items-center justify-between text-left shadow-xl hover:bg-white/10 hover:scale-[1.01] transition-all duration-300 group cursor-pointer">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-green-500/20 p-2.5 rounded-xl text-green-400 group-hover:bg-green-500 group-hover:text-white transition-all"><i class="fas fa-wallet text-lg"></i></div>
+                    <div>
+                        <h3 class="font-bold text-sm">Laporan Kas RT</h3>
+                        <p class="text-[11px] text-gray-400">Cek & kelola transparansi keuangan</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400 group-hover:text-white transition text-xs"></i>
+            </button>
+
+            <!-- Jadwal Menu -->
+            <button onclick="openMenu('jadwal')" class="w-full bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-2xl flex items-center justify-between text-left shadow-xl hover:bg-white/10 hover:scale-[1.01] transition-all duration-300 group cursor-pointer">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-blue-500/20 p-2.5 rounded-xl text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all"><i class="fas fa-calendar-alt text-lg"></i></div>
+                    <div>
+                        <h3 class="font-bold text-sm">Jadwal RT & Surat Pengumuman</h3>
+                        <p class="text-[11px] text-gray-400">Ronda, Kerja Bakti, & Detail Surat RT</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400 group-hover:text-white transition text-xs"></i>
+            </button>
+
+            <!-- UMKM Shop Menu -->
+            <button onclick="openMenu('shop')" class="w-full bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-2xl flex items-center justify-between text-left shadow-xl hover:bg-white/10 hover:scale-[1.01] transition-all duration-300 group cursor-pointer">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-orange-500/20 p-2.5 rounded-xl text-orange-400 group-hover:bg-orange-500 group-hover:text-white transition-all"><i class="fas fa-store text-lg"></i></div>
+                    <div>
+                        <h3 class="font-bold text-sm">Warung & UMKM</h3>
+                        <p class="text-[11px] text-gray-400">Beli produk lokal usaha tetangga</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400 group-hover:text-white transition text-xs"></i>
+            </button>
+
+            <!-- Saran Menu -->
+            <button onclick="openMenu('saran')" class="w-full bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-2xl flex items-center justify-between text-left shadow-xl hover:bg-white/10 hover:scale-[1.01] transition-all duration-300 group cursor-pointer">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-purple-500/20 p-2.5 rounded-xl text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-all"><i class="fas fa-comment-dots text-lg"></i></div>
+                    <div>
+                        <h3 class="font-bold text-sm">Saran & Masukan</h3>
+                        <p class="text-[11px] text-gray-400">Kirim aspirasi kamu ke pengurus</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400 group-hover:text-white transition text-xs"></i>
+            </button>
+        </div>
+
+        <footer class="text-center text-[11px] text-gray-600 mt-12 mb-4">Aplikasi Digital RT © By Andra</footer>
+    </div>
+
+    <!-- ================= 🚪 MODAL GOOGLE SIGN IN ================= -->
+    <div id="googleModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 hidden opacity-0 transition-all duration-300">
+        <div class="w-full bg-white rounded-[28px] p-8 shadow-2xl border border-gray-200 flex flex-col max-w-sm text-left relative transform scale-95 transition-all duration-300" id="modalCard">
+            <button onclick="tutupModalLoginGoogle()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 cursor-pointer"><i class="fas fa-times text-base"></i></button>
+            <div class="mb-4 flex items-center text-xl font-semibold text-gray-700">
+                <i class="fas fa-shield-alt text-blue-600 mr-2"></i>
+                <span class="text-gray-800 text-sm font-bold tracking-tight">Login Sistem RT</span>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Sign in</h2>
+            
+            <div class="mt-2 mb-4">
+                <p id="infoPetunjukAkun" class="text-xs text-red-500 font-semibold bg-red-50 p-2 rounded-lg border border-red-200">
+                    <i class="fas fa-exclamation-circle mr-1"></i> Masukkan Akun Warga / Pengurus!
+                </p>
+            </div>
+
+            <div id="inputFormBox" class="w-full">
+                <div class="space-y-4">
+                    <input type="text" id="loginUsername" placeholder="Username (warga / pengurus)" class="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm bg-white text-black focus:outline-none focus:border-blue-600">
+                    <input type="password" id="loginPassword" placeholder="Password Sistem" class="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm bg-white text-black focus:outline-none focus:border-blue-600">
+                    <button onclick="prosesVerifikasiLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-xs font-bold transition cursor-pointer">Masuk Aplikasi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 📑 SEKSI SUB-MENU ESTETIK ================= -->
+    <div id="content-screen" class="fixed inset-0 z-40 bg-gradient-to-b from-slate-900 via-gray-950 to-black hidden flex-col w-full min-h-screen overflow-y-auto">
+        <header class="bg-slate-900/80 backdrop-blur-md p-4 flex items-center space-x-3 border-b border-white/5 sticky top-0 z-30">
+            <button onclick="backToHome()" class="hover:text-amber-400 text-base cursor-pointer"><i class="fas fa-arrow-left"></i></button>
+            <h2 id="menu-title" class="text-base font-black tracking-wide text-white uppercase">Nama Menu</h2>
+        </header>
+        
+        <main class="p-4 flex-1 pb-16 relative z-10">
+            
+            <!-- SUB-CONTENT: LAPORAN KAS RT -->
+            <div id="content-kas" class="sub-content hidden space-y-4">
+                <div class="bg-white/5 border border-white/10 p-5 rounded-2xl shadow-xl flex justify-between items-center backdrop-blur-sm">
+                    <div>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total Saldo Kas RT</p>
+                        <p id="totalSaldoTxt" class="text-2xl font-black text-green-400 mt-0.5">Rp 0</p>
+                    </div>
+                    <button id="btnToggleKelola" onclick="togglePanelKelola()" class="hidden bg-amber-500 text-black px-3 py-2 rounded-xl text-xs font-black shadow-md transition cursor-pointer">
+                        <i class="fas fa-edit mr-1"></i> Kelola Kas
+                    </button>
+                </div>
+
+                <!-- PANEL EDIT BENDAHARA (HANYA PENGURUS) -->
+                <div id="panelKelolaKas" class="bg-slate-900 border border-white/10 p-4 rounded-2xl shadow-xl hidden space-y-3 text-left">
+                    <h3 class="text-xs font-bold text-gray-200 flex items-center"><i class="fas fa-calculator text-amber-400 mr-2"></i> INPUT KAS BARU</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="setJenisTransaksi('masuk')" id="btnJenisMasuk" class="py-2 rounded-xl text-xs font-black border border-green-500 bg-green-500/20 text-green-300 cursor-pointer">Pemasukan (+)</button>
+                        <button onclick="setJenisTransaksi('keluar')" id="btnJenisKeluar" class="py-2 rounded-xl text-xs font-black border border-white/10 text-gray-400 hover:bg-white/5 cursor-pointer">Pengeluaran (-)</button>
+                    </div>
+                    <div class="space-y-2">
+                        <input type="number" id="jumlahUang" placeholder="Nominal Rp" class="w-full p-2.5 bg-gray-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none">
+                        <input type="text" id="keteranganUang" placeholder="Keterangan Penyerahan" class="w-full p-2.5 bg-gray-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none">
+                    </div>
+                    <button onclick="simpanTransaksiKas()" class="w-full bg-green-500 text-black font-black text-xs py-2.5 rounded-xl shadow-lg cursor-pointer">Simpan Transaksi</button>
+                </div>
+
+                <!-- 🔍 GLOBAL SEARCH KAS -->
+                <div class="relative w-full">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500 text-xs">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" id="searchKas" oninput="renderSemuaData()" placeholder="Cari keterangan / nominal kas..." class="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-green-500 placeholder-gray-500">
+                </div>
+
+                <!-- RIWAYAT LOG KAS -->
+                <div class="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-3">
+                    <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Daftar Transaksi Terbuku</h3>
+                    <p id="tipsAksiKas" class="text-[9px] text-amber-400 hidden">*Khusus Pengurus: Tahan lama item untuk hapus kas</p>
+                    <div id="logTransaksiList" class="space-y-2 max-h-64 overflow-y-auto pr-1">
+                        <p id="kasKosongTxt" class="text-xs text-center text-gray-500 py-4">Belum ada data keuangan masuk.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-CONTENT: JADWAL RT -->
+            <div id="content-jadwal" class="sub-content hidden space-y-4 text-left">
+                <div class="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-3 hidden" id="boxInputJadwal">
+                    <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wide"><i class="fas fa-plus mr-1"></i> Tambah Kegiatan Baru</h3>
+                    <input type="text" id="inputNamaJadwal" placeholder="Nama Agenda Kegiatan" class="w-full p-2.5 bg-gray-950 border border-white/10 rounded-xl text-xs text-white">
+                    <input type="text" id="inputWaktuJadwal" placeholder="Hari / Tanggal / Jam" class="w-full p-2.5 bg-gray-950 border border-white/10 rounded-xl text-xs text-white">
+                    <textarea id="inputDeskripsiJadwal" rows="3" placeholder="Isi Surat Pengumuman..." class="w-full p-2.5 bg-gray-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none"></textarea>
+                    <button onclick="simpanJadwalBaru()" class="w-full bg-amber-500 text-black font-black text-xs py-2.5 rounded-xl">Simpan Jadwal</button>
+                </div>
+
+                <!-- 🔍 GLOBAL SEARCH JADWAL -->
+                <div class="relative w-full">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500 text-xs">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" id="searchJadwal" oninput="renderSemuaData()" placeholder="Cari nama agenda atau isi surat..." class="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-blue-500 placeholder-gray-500">
+                </div>
+
+                <div class="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-3">
+                    <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Agenda & Kegiatan Terjadwal</h3>
+                    <p id="tipsAksiJadwal" class="text-[9px] text-amber-400 hidden">*Khusus Pengurus: Tahan lama item untuk hapus jadwal</p>
+                    <div id="listJadwalContainer" class="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+                        <p class="text-xs text-center text-gray-500 py-4">Belum ada agenda kegiatan terdekat.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-CONTENT: WARUNG & UMKM (GRID LAYOUT) -->
+            <div id="content-shop" class="sub-content hidden space-y-4 text-left">
+                <div class="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-3">
+                    <h3 class="text-xs font-bold text-orange-400 uppercase tracking-wide"><i class="fas fa-bullhorn mr-1"></i> Daftarkan Dagangan Jualan Anda</h3>
+                    <div class="space-y-2">
+                        <input type="text" id="shopNamaBarang" placeholder="Nama Jualan" class="w-full p-2.5 bg-gray-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none">
+                        <input type="text" id="shopHargaBarang" placeholder="Harga Jualan (Contoh: Rp 15.000)" class="w-full p-2.5 bg-gray-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none">
+                        <textarea id="shopDeskripsi" rows="2" placeholder="Deskripsi Singkat Jualan" class="w-full p-2.5 bg-gray-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none"></textarea>
+                        <input type="number" id="shopNoWa" placeholder="Nomor WA Aktif (Contoh: 628123xxx)" class="w-full p-2.5 bg-gray-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none">
+                        
+                        <!-- BARU: INPUT GAMBAR PRODUK DARI GALERI -->
+                        <div>
+                            <label class="text-[10px] text-gray-400 font-bold block mb-1">Foto Dagangan (Opsional):</label>
+                            <input type="file" id="inputFileShop" accept="image/*" class="hidden" onchange="handleFileShopTerpilih(this)">
+                            <div onclick="document.getElementById('inputFileShop').click()" class="w-full p-3 bg-gray-950 border-2 border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-orange-500 transition group">
+                                <i class="fas fa-camera text-base text-gray-500 group-hover:text-orange-400 mb-1"></i>
+                                <span id="labelNamaFileShop" class="text-[10px] text-gray-400 truncate max-w-xs">Klik untuk pasang foto jualan</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="simpanDaganganBaru()" class="w-full bg-orange-500 text-black font-black text-xs py-2.5 rounded-xl cursor-pointer">Buka Lapak Dagangan</button>
+                </div>
+
+                <!-- 🔍 GLOBAL SEARCH PASAR SHOP -->
+                <div class="relative w-full">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500 text-xs">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" id="searchShop" oninput="renderSemuaData()" placeholder="Cari nama produk / makanan jualan..." class="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-orange-500 placeholder-gray-500">
+                </div>
+
+                <div class="space-y-3">
+                    <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Etalase Dagangan Warga RT</h3>
+                    <p class="text-[9px] text-gray-400">*Tips: Klik item untuk melihat detail. **Tahan lama item (0.8 detik)** untuk menu Edit atau Hapus.</p>
+                    
+                    <!-- GRID CONTAINER 2 KOLOM -->
+                    <div id="listShopContainer" class="grid grid-cols-2 gap-3 max-h-[440px] overflow-y-auto pr-1">
+                        <p id="tokoKosongTxt" class="text-xs text-center text-gray-500 py-6 col-span-2">Belum ada dagangan yang dibuka.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-CONTENT: KOTAK SARAN & KRITIK PUBLIK -->
+            <div id="content-saran" class="sub-content hidden space-y-4 text-left">
+                <div class="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-3">
+                    <h3 class="text-xs font-bold text-purple-400 uppercase tracking-wide"><i class="fas fa-pen-nib mr-1"></i> Tulis Aspirasi / Kritik Anda</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="saranNama" placeholder="Nama Lengkap" class="p-2.5 bg-gray-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none">
+                        <input type="text" id="saranAlamat" placeholder="Nomor Rumah / Blok" class="p-2.5 bg-gray-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none">
+                    </div>
+                    <textarea id="saranInput" rows="3" class="w-full p-2.5 bg-gray-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none" placeholder="Tulis kritik & saran kamu secara terbuka untuk warga..."></textarea>
+                    <button onclick="kirimSaranPublik()" class="w-full bg-purple-500 text-black font-black text-xs py-2.5 rounded-xl shadow-md cursor-pointer">Post ke Ruang Publik</button>
+                </div>
+
+                <!-- 🔍 GLOBAL SEARCH SARAN -->
+                <div class="relative w-full">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500 text-xs">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" id="searchSaran" oninput="renderSemuaData()" placeholder="Cari saran berdasarkan nama / isi aspirasi..." class="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500 placeholder-gray-500">
+                </div>
+
+                <div class="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-3">
+                    <h2 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Aspirasi & Saran Warga</h2>
+                    <div id="feedSaranThreads" class="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+                        <p id="saranKosongTxt" class="text-xs text-center text-gray-500 py-6">Belum ada aspirasi dari warga.</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ================= 🛍️ MODAL DETAIL PRODUK FULL SCREEN ================= -->
+    <div id="shopDetailModal" class="fixed inset-0 z-50 bg-black/90 hidden flex-col w-full max-w-md mx-auto h-screen overflow-y-auto opacity-0 transition-all duration-300">
+        <!-- Header Modal -->
+        <header class="bg-slate-900/90 backdrop-blur-md p-4 flex items-center justify-between border-b border-white/5 sticky top-0 z-10">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-store text-orange-400 text-sm"></i>
+                <h3 class="text-xs font-black tracking-wider uppercase text-white">Detail Produk UMKM</h3>
+            </div>
+            <button onclick="tutupDetailProdukModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        </header>
+
+        <!-- Konten Detail Full Layar -->
+        <div class="p-5 flex-1 space-y-4 flex flex-col justify-between">
+            <div class="space-y-4">
+                <!-- Gambar Besar -->
+                <div class="w-full aspect-square rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-gray-900">
+                    <img id="modalShopGambar" src="" class="w-full h-full object-cover" alt="Detail Produk">
+                </div>
+
+                <!-- Judul & Harga di Bawahnya -->
+                <div class="bg-white/5 border border-white/10 p-4 rounded-xl space-y-1.5 text-left">
+                    <h2 id="modalShopNama" class="text-base font-black text-white leading-snug">Nama Produk</h2>
+                    <p id="modalShopHarga" class="text-sm font-extrabold text-orange-400">Harga</p>
+                </div>
+
+                <!-- Deskripsi Lengkap -->
+                <div class="bg-white/5 border border-white/10 p-4 rounded-xl space-y-1.5 text-left">
+                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider"><i class="fas fa-align-left mr-1"></i> Deskripsi Produk:</h4>
+                    <p id="modalShopDeskripsi" class="text-xs text-gray-200 leading-relaxed italic">Detail deskripsi barang...</p>
+                </div>
+            </div>
+
+            <!-- Tombol via WA Paling Bawah Sendiri -->
+            <div class="pt-6">
+                <a id="modalShopBtnWa" href="#" target="_blank" class="w-full bg-emerald-500 hover:bg-emerald-600 text-black text-center py-3 rounded-xl text-xs font-black flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/20 transition-all btn-interaktif">
+                    <i class="fab fa-whatsapp text-base"></i> <span>Hubungi & Beli via WA</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================= JAVASCRIPT LOGIC WORKER ================= -->
+    <script>
+        let sessionUser = null; 
+        let jenisTransaksiTerpilih = 'masuk';
+        let indeksSliderSekarang = 0;
+        let intervalOtomatisSlider;
+        let dataFileGambarBase64 = null;
+        let dataFileShopBase64 = null; // Memori penyimpanan sementara file jualan warga
+
+        let deviceTokenId = localStorage.getItem('andra_device_token');
+        if (!deviceTokenId) {
+            deviceTokenId = 'warga_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+            localStorage.setItem('andra_device_token', deviceTokenId);
+        }
+
+        let listFotoMemori = JSON.parse(localStorage.getItem('andra_fotos'));
+        if (!listFotoMemori) {
+            listFotoMemori = [
+                { url: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600", caption: "Kemenangan Besar Juara Lomba Karnaval RT" },
+                { url: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=600", caption: "Arisan Rutin Bulanan & Sosialisasi Warga" }
+            ];
+            localStorage.setItem('andra_fotos', JSON.stringify(listFotoMemori));
+        }
+
+        let databaseKas = JSON.parse(localStorage.getItem('andra_kas')) || [];
+        
+        let databaseJadwal = JSON.parse(localStorage.getItem('andra_jadwal')) || [
+            { id: 101, nama: "Kerja Bakti Bersama", waktu: "Sabtu, 07:00 WIB", deskripsi: "Assalamualaikum warga RT, besok pagi kumpul di lapangan pos ronda ya. Mohon membawa perlengkapan kebersihan masing-masing. Terima kasih.", waktuDibuat: Date.now() },
+            { id: 102, nama: "Ronda Malam Pos Pusat", waktu: "Setiap Hari Jam 22:00", deskripsi: "Diberitahukan kepada seluruh warga yang masuk jadwal piket wajib mengisi presensi kehadiran pos ronda tepat waktu.", waktuDibuat: Date.now() }
+        ];
+        
+        let databaseShop = JSON.parse(localStorage.getItem('andra_shop')) || [
+            { id: 201, pemilikToken: "sistem", nama: "Nasi Goreng Spesial Pak Slamet", harga: "Rp 15.000", deskripsi: "Nasi goreng bumbu racik khas Jawa dengan suwiran ayam melimpah, telur dadar/mata sapi, plus kerupuk renyah. Bisa request tingkat kepedasan dari level 1 sampai 5!", wa: "628123456789", gambar: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500" }
+        ];
+        let databaseSaran = JSON.parse(localStorage.getItem('andra_saran')) || [];
+
+        // --- SISTEM SLIDER FOTO DOKUMENTER ---
+        function updateTampilanSlider() {
+            const wadahSlider = document.getElementById('netflix-slider');
+            const teksCaption = document.getElementById('sliderCaption');
+            if (listFotoMemori.length === 0) {
+                wadahSlider.style.backgroundImage = "none";
+                teksCaption.innerText = "Belum ada foto."; return;
+            }
+            wadahSlider.style.backgroundImage = `url('${listFotoMemori[indeksSliderSekarang].url}')`;
+            teksCaption.innerText = listFotoMemori[indeksSliderSekarang].caption;
+        }
+
+        function mulaiSliderOtomatis() {
+            clearInterval(intervalOtomatisSlider);
+            if (listFotoMemori.length > 1) {
+                intervalOtomatisSlider = setInterval(() => { geserSliderManual(1); }, 4000);
+            }
+        }
+
+        function geserSliderManual(arah) {
+            if (listFotoMemori.length === 0) return;
+            indeksSliderSekarang += arah;
+            if (indeksSliderSekarang >= listFotoMemori.length) indeksSliderSekarang = 0;
+            else if (indeksSliderSekarang < 0) indeksSliderSekarang = listFotoMemori.length - 1;
+            updateTampilanSlider(); mulaiSliderOtomatis();
+        }
+
+        function togglePanelFoto() { document.getElementById('panelInputFoto').classList.toggle('hidden'); }
+
+        function handleFileTerpilih(input) {
+            const file = input.files[0]; if (!file) return;
+            if (!file.type.startsWith('image/')) { cetakNotifikasi("File harus berupa gambar!", "gagal"); return; }
+            document.getElementById('labelNamaFile').innerText = `Foto Terpilih: ${file.name}`;
+            document.getElementById('labelNamaFile').className = "text-[11px] text-amber-400 font-bold truncate max-w-xs";
+            const reader = new FileReader();
+            reader.onload = function(e) { dataFileGambarBase64 = e.target.result; };
+            reader.readAsDataURL(file);
+        }
+
+        function simpanFotoBaru() {
+            const captionInput = document.getElementById('inputCaptionFoto').value.trim();
+            if (!captionInput || !dataFileGambarBase64) { cetakNotifikasi("Isi Judul & Pilih file foto!", "gagal"); return; }
+            
+            listFotoMemori.unshift({ url: dataFileGambarBase64, caption: captionInput });
+            if (listFotoMemori.length > 5) listFotoMemori.pop();
+            
+            localStorage.setItem('andra_fotos', JSON.stringify(listFotoMemori));
+            indeksSliderSekarang = 0; updateTampilanSlider(); mulaiSliderOtomatis();
+            
+            document.getElementById('inputCaptionFoto').value = "";
+            document.getElementById('inputFileDokumen').value = "";
+            document.getElementById('labelNamaFile').innerText = "Klik untuk buka Galeri / File";
+            document.getElementById('labelNamaFile').className = "text-[11px] text-gray-400 truncate max-w-xs";
+            dataFileGambarBase64 = null; togglePanelFoto();
+            cetakNotifikasi("Foto Dokumentasi dipasang di depan!", "sukses");
+        }
+
+        // --- BARU: HANDLER FILE GAMBAR UNTUK MENU SHOP ---
+        function handleFileShopTerpilih(input) {
+            const file = input.files[0]; if (!file) return;
+            if (!file.type.startsWith('image/')) { cetakNotifikasi("File harus berupa gambar jualan!", "gagal"); return; }
+            document.getElementById('labelNamaFileShop').innerText = `Gambar Siap: ${file.name}`;
+            document.getElementById('labelNamaFileShop').className = "text-[10px] text-orange-400 font-bold truncate max-w-xs";
+            const reader = new FileReader();
+            reader.onload = function(e) { dataFileShopBase64 = e.target.result; };
+            reader.readAsDataURL(file);
+        }
+
+        // --- SISTEM TOAST NOTIFIKASI ESTETIK ---
+        function cetakNotifikasi(pesan, jenis) {
+            const wadah = document.getElementById('toastNotification');
+            const isi = document.getElementById('toastBody');
+            const ikon = document.getElementById('toastIcon');
+            const teks = document.getElementById('toastText');
+
+            teks.innerText = pesan;
+            if(jenis === 'sukses') {
+                isi.className = "flex items-center space-x-3 p-4 rounded-xl shadow-2xl border bg-emerald-50 border-emerald-200 backdrop-blur-md animate-item";
+                ikon.className = "text-xs flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500 text-white";
+                ikon.innerHTML = '<i class="fas fa-check"></i>';
+                teks.className = "text-xs font-bold text-emerald-900";
+            } else {
+                isi.className = "flex items-center space-x-3 p-4 rounded-xl shadow-2xl border bg-rose-50 border-rose-200 backdrop-blur-md animate-shake";
+                ikon.className = "text-xs flex items-center justify-center w-5 h-5 rounded-full bg-rose-500 text-white";
+                ikon.innerHTML = '<i class="fas fa-times"></i>';
+                teks.className = "text-xs font-bold text-rose-900";
+            }
+            wadah.className = "fixed top-5 left-1/2 -translate-x-1/2 z-50 w-80 max-w-[90%] transform translate-y-0 opacity-100 transition-all duration-300";
+            setTimeout(() => {
+                wadah.className = "fixed top-5 left-1/2 -translate-x-1/2 z-50 w-80 max-w-[90%] transform -translate-y-24 opacity-0 transition-all duration-500 pointer-events-none";
+            }, 2500);
+        }
+
+        // --- MANAJEMEN AKUN LOGIN ---
+        function bukaModalLoginGoogle() {
+            if(sessionUser) {
+                sessionUser = null;
+                localStorage.removeItem('andra_session');
+                document.getElementById('loginBtn').innerHTML = '<i class="fas fa-sign-in-alt mr-1"></i> Login';
+                document.getElementById('txtStatusLogin').innerHTML = 'Status: <strong class="text-amber-400">Belum Login (Mode Lihat)</strong>';
+                document.getElementById('boxKelolaFoto').classList.add('hidden');
+                document.getElementById('btnToggleKelola').classList.add('hidden');
+                document.getElementById('panelKelolaKas').classList.add('hidden');
+                document.getElementById('boxInputJadwal').classList.add('hidden');
+                document.getElementById('tipsAksiKas').classList.add('hidden');
+                document.getElementById('tipsAksiJadwal').classList.add('hidden');
+                cetakNotifikasi("Anda telah keluar dari akun.", "sukses");
+                renderSemuaData();
+                return;
+            }
+            const modal = document.getElementById('googleModal');
+            modal.classList.remove('hidden'); setTimeout(() => { modal.classList.add('opacity-100'); }, 50);
+        }
+
+        function prosesVerifikasiLogin() {
+            let u = document.getElementById('loginUsername').value.trim().toLowerCase();
+            let p = document.getElementById('loginPassword').value;
+
+            if(u === 'warga' && p === 'warga') {
+                sessionUser = { username: 'warga', role: 'warga' };
+            } else if(u === 'pengurus' && p === 'wargaku123') {
+                sessionUser = { username: 'pengurus', role: 'pengurus' };
+            } else {
+                cetakNotifikasi("Username / Password salah!", "gagal"); return;
+            }
+
+            localStorage.setItem('andra_session', JSON.stringify(sessionUser));
+            document.getElementById('loginBtn').innerHTML = '<i class="fas fa-sign-out-alt mr-1"></i> Keluar';
+            document.getElementById('txtStatusLogin').innerHTML = `Akun: <strong class="text-emerald-400 uppercase">${sessionUser.role}</strong>`;
+            
+            if(sessionUser.role === 'pengurus') {
+                document.getElementById('boxKelolaFoto').classList.remove('hidden');
+                document.getElementById('btnToggleKelola').classList.remove('hidden');
+                document.getElementById('boxInputJadwal').classList.remove('hidden');
+                document.getElementById('tipsAksiKas').classList.remove('hidden');
+                document.getElementById('tipsAksiJadwal').classList.remove('hidden');
+            }
+            
+            document.getElementById('loginUsername').value = "";
+            document.getElementById('loginPassword').value = "";
+            tutupModalLoginGoogle();
+            cetakNotifikasi("Berhasil masuk ke aplikasi!", "sukses");
+            renderSemuaData();
+        }
+
+        function tutupModalLoginGoogle() {
+            const modal = document.getElementById('googleModal');
+            modal.classList.remove('opacity-100'); setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        // --- SISTEM PENGATURAN SUB-MENU ---
+        function openMenu(menuType) {
+            document.getElementById('home-screen').classList.add('hidden');
+            const contentScreen = document.getElementById('content-screen');
+            contentScreen.classList.remove('hidden'); contentScreen.classList.add('flex');
+            document.querySelectorAll('.sub-content').forEach(el => el.classList.add('hidden'));
+            
+            // Bersihkan teks di kotak pencarian setiap kali menu dibuka baru
+            document.getElementById('searchKas').value = "";
+            document.getElementById('searchJadwal').value = "";
+            document.getElementById('searchShop').value = "";
+            document.getElementById('searchSaran').value = "";
+
+            const title = document.getElementById('menu-title');
+            if(menuType === 'kas') { 
+                title.innerText = "Laporan Keuangan Kas"; document.getElementById('content-kas').classList.remove('hidden'); 
+            }
+            else if(menuType === 'jadwal') { 
+                title.innerText = "Jadwal & Kegiatan RT"; document.getElementById('content-jadwal').classList.remove('hidden'); 
+            }
+            else if(menuType === 'shop') { title.innerText = "Pasar UMKM Warga"; document.getElementById('content-shop').classList.remove('hidden'); }
+            else if(menuType === 'saran') { title.innerText = "Aspirasi & Saran Warga"; document.getElementById('content-saran').classList.remove('hidden'); }
+            renderSemuaData();
+        }
+
+        function backToHome() {
+            document.getElementById('content-screen').classList.remove('flex'); document.getElementById('content-screen').classList.add('hidden');
+            document.getElementById('home-screen').classList.remove('hidden');
+        }
+
+        // --- LOGIKA UPDATE DATA KAS ---
+        function togglePanelKelola() { document.getElementById('panelKelolaKas').classList.toggle('hidden'); }
+        function setJenisTransaksi(jenis) {
+            jenisTransaksiTerpilih = jenis;
+            const btnM = document.getElementById('btnJenisMasuk'); const btnK = document.getElementById('btnJenisKeluar');
+            if(jenis === 'masuk') {
+                btnM.className = "py-2 rounded-xl text-xs font-black border border-green-500 bg-green-500/20 text-green-300 cursor-pointer";
+                btnK.className = "py-2 rounded-xl text-xs font-black border border-white/10 text-gray-400 hover:bg-white/5 cursor-pointer";
+            } else {
+                btnK.className = "py-2 rounded-xl text-xs font-black border border-rose-500 bg-rose-500/20 text-rose-300 cursor-pointer";
+                btnM.className = "py-2 rounded-xl text-xs font-black border border-white/10 text-gray-400 hover:bg-white/5 cursor-pointer";
+            }
+        }
+
+        function simpanTransaksiKas() {
+            let uang = parseInt(document.getElementById('jumlahUang').value);
+            let ket = document.getElementById('keteranganUang').value.trim();
+            if(!uang || !ket) { cetakNotifikasi("Data Kas tidak boleh kosong!", "gagal"); return; }
+            
+            databaseKas.unshift({ id: Date.now(), jenis: jenisTransaksiTerpilih, nominal: uang, keterangan: ket });
+            localStorage.setItem('andra_kas', JSON.stringify(databaseKas));
+            document.getElementById('jumlahUang').value = ""; document.getElementById('keteranganUang').value = "";
+            togglePanelKelola(); cetakNotifikasi("Transaksi berhasil dibukukan!", "sukses");
+            renderSemuaData();
+        }
+
+        // --- LOGIKA UPDATE DATA JADWAL ---
+        function simpanJadwalBaru() {
+            let nama = document.getElementById('inputNamaJadwal').value.trim();
+            let waktu = document.getElementById('inputWaktuJadwal').value.trim();
+            let deskripsi = document.getElementById('inputDeskripsiJadwal').value.trim();
+            if(!nama || !waktu) { cetakNotifikasi("Isi agenda dan waktu!", "gagal"); return; }
+
+            databaseJadwal.unshift({ id: Date.now(), nama: nama, waktu: waktu, deskripsi: deskripsi || "Tidak ada deskripsi detail tambahan.", waktuDibuat: Date.now() });
+            localStorage.setItem('andra_jadwal', JSON.stringify(databaseJadwal));
+            document.getElementById('inputNamaJadwal').value = ""; document.getElementById('inputWaktuJadwal').value = ""; document.getElementById('inputDeskripsiJadwal').value = "";
+            cetakNotifikasi("Jadwal agenda berhasil diposting!", "sukses");
+            renderSemuaData();
+        }
+
+        function toggleDetailSuratJadwal(id) { document.getElementById(`surat-box-${id}`).classList.toggle('hidden'); }
+
+        // --- LOGIKA MODAL POP-UP DETAIL PRODUK FULL SCREEN ---
+        function bukaDetailProdukModal(id) {
+            const produk = databaseShop.find(x => x.id == id);
+            if (!produk) return;
+
+            document.getElementById('modalShopGambar').src = produk.gambar || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500";
+            document.getElementById('modalShopNama').innerText = produk.nama;
+            document.getElementById('modalShopHarga').innerText = produk.harga;
+            document.getElementById('modalShopDeskripsi').innerText = produk.deskripsi || "Tidak ada deskripsi produk.";
+            
+            // Link WA Asli Warga
+            document.getElementById('modalShopBtnWa').href = `https://wa.me/${produk.wa}?text=Halo%20saya%20warga%20RT%20ingin%20membeli%20dagangan%20${encodeURIComponent(produk.nama)}`;
+
+            const modal = document.getElementById('shopDetailModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => { modal.classList.add('opacity-100'); }, 50);
+        }
+
+        function tutupDetailProdukModal() {
+            const modal = document.getElementById('shopDetailModal');
+            modal.classList.remove('opacity-100');
+            setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300);
+        }
+
+        // --- LOGIKA MODIFIKASI UPDATE DATA TOKO UMKM (DENGAN GAMBAR KUSTOM) ---
+        function simpanDaganganBaru() {
+            let nama = document.getElementById('shopNamaBarang').value.trim();
+            let harga = document.getElementById('shopHargaBarang').value.trim();
+            let desk = document.getElementById('shopDeskripsi').value.trim();
+            let wa = document.getElementById('shopNoWa').value.trim();
+
+            if(!nama || !harga || !wa) { cetakNotifikasi("Lengkapi formulir jualan!", "gagal"); return; }
+            
+            // Jika warga tidak pilih gambar kustom, pasang gambar bawaan sistem secara acak
+            let gambarFinal = dataFileShopBase64;
+            if (!gambarFinal) {
+                const arrayGambarRandom = [
+                    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500",
+                    "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=500",
+                    "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500",
+                    "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=500"
+                ];
+                gambarFinal = arrayGambarRandom[Math.floor(Math.random() * arrayGambarRandom.length)];
+            }
+
+            databaseShop.unshift({ id: Date.now(), pemilikToken: deviceTokenId, nama: nama, harga: harga, deskripsi: desk || 'Tidak ada deskripsi produk.', wa: wa, gambar: gambarFinal });
+            localStorage.setItem('andra_shop', JSON.stringify(databaseShop));
+
+            // Reset Input Formulir
+            document.getElementById('shopNamaBarang').value = ""; document.getElementById('shopHargaBarang').value = "";
+            document.getElementById('shopDeskripsi').value = ""; document.getElementById('shopNoWa').value = "";
+            document.getElementById('inputFileShop').value = "";
+            document.getElementById('labelNamaFileShop').innerText = "Klik untuk pasang foto jualan";
+            document.getElementById('labelNamaFileShop').className = "text-[10px] text-gray-400 truncate max-w-xs";
+            dataFileShopBase64 = null; 
+
+            cetakNotifikasi("Toko UMKM warga berhasil dibuka!", "sukses");
+            renderSemuaData();
+        }
+
+        // --- LOGIKA UPDATE DATA KOTAK SARAN ---
+        function kirimSaranPublik() {
+            let nama = document.getElementById('saranNama').value.trim();
+            let alamat = document.getElementById('saranAlamat').value.trim();
+            let isi = document.getElementById('saranInput').value.trim();
+
+            if(!nama || !isi) { cetakNotifikasi("Nama & isi aspirasi wajib diisi!", "gagal"); return; }
+            databaseSaran.unshift({ id: Date.now(), pemilikToken: deviceTokenId, nama: nama, alamat: alamat, teks: isi, waktuDibuat: Date.now(), status: "Pending" });
+            localStorage.setItem('andra_saran', JSON.stringify(databaseSaran));
+
+            document.getElementById('saranNama').value = ""; document.getElementById('saranAlamat').value = "";
+            document.getElementById('saranInput').value = "";
+            cetakNotifikasi("Aspirasi terkirim ke ruang publik!", "sukses");
+            renderSemuaData();
+        }
+
+        function tandaiSaranDiurus(id) {
+            databaseSaran = databaseSaran.map(sr => {
+                if(sr.id == id) sr.status = "Diurus";
+                return sr;
+            });
+            localStorage.setItem('andra_saran', JSON.stringify(databaseSaran));
+            cetakNotifikasi("Saran berhasil ditandai 'Diurus'!", "sukses");
+            renderSemuaData();
+        }
+
+        function dapetIkonUnik(namaAgenda) {
+            let text = namaAgenda.toLowerCase();
+            if(text.includes('bakti') || text.includes('bersih') || text.includes('kerja')) return '<i class="fas fa-broom"></i>';
+            if(text.includes('ronda') || text.includes('siskamling') || text.includes('malam')) return '<i class="fas fa-moon"></i>';
+            if(text.includes('rapat') || text.includes('musyawarah') || text.includes('kumpul')) return '<i class="fas fa-bullhorn"></i>';
+            return '<i class="fas fa-star"></i>';
+        }
+
+        // --- RENDER DATA KE LAYAR + LOGIKA FILTER PENCARIAN ---
+        function renderSemuaData() {
+            const isPengurus = sessionUser && sessionUser.role === 'pengurus';
+            const waktuSekarang = Date.now();
+            const batas7Hari = 7 * 24 * 60 * 60 * 1000;
+            const batas30Hari = 30 * 24 * 60 * 60 * 1000;
+
+            // Ambil Nilai Keyword Pencarian
+            const keywordKas = document.getElementById('searchKas').value.toLowerCase().trim();
+            const keywordJadwal = document.getElementById('searchJadwal').value.toLowerCase().trim();
+            const keywordShop = document.getElementById('searchShop').value.toLowerCase().trim();
+            const keywordSaran = document.getElementById('searchSaran').value.toLowerCase().trim();
+
+            // 1. Render & Filter Kas
+            let totalSaldo = 0;
+            let logKasHTML = "";
+            databaseKas.forEach(item => {
+                if(item.jenis === 'masuk') totalSaldo += item.nominal;
+                else totalSaldo -= item.nominal;
+
+                let isMasuk = item.jenis === 'masuk';
+                
+                if(item.keterangan.toLowerCase().includes(keywordKas) || item.nominal.toString().includes(keywordKas)) {
+                    logKasHTML += `
+                        <div class="p-3 bg-gray-900 rounded-xl border border-white/5 flex justify-between items-center animate-item btn-interaktif cursor-pointer" 
+                             oncontextmenu="return false;" ontouchstart="mulaisentuh('${item.id}', 'kas')" ontouchend="stopsentuh()">
+                            <div>
+                                <p class="text-xs font-bold text-white">${item.keterangan}</p>
+                                <p class="text-[10px] text-gray-500">${isMasuk ? 'Pemasukan' : 'Pengeluaran'}</p>
+                            </div>
+                            <p class="text-xs font-black ${isMasuk ? 'text-green-400' : 'text-rose-400'}">${isMasuk ? '+' : '-'} Rp ${item.nominal.toLocaleString('id-ID')}</p>
+                        </div>`;
+                }
+            });
+            document.getElementById('totalSaldoTxt').innerText = "Rp " + totalSaldo.toLocaleString('id-ID');
+            document.getElementById('logTransaksiList').innerHTML = logKasHTML || `<p class="text-xs text-center text-gray-500 py-4">Data kas tidak ditemukan.</p>`;
+
+            // 2. Render & Filter Jadwal
+            let logJadwalHTML = "";
+            databaseJadwal = databaseJadwal.filter(j => (waktuSekarang - j.waktuDibuat) < batas7Hari);
+            localStorage.setItem('andra_jadwal', JSON.stringify(databaseJadwal));
+
+            databaseJadwal.forEach(j => {
+                if(j.nama.toLowerCase().includes(keywordJadwal) || j.deskripsi.toLowerCase().includes(keywordJadwal) || j.waktu.toLowerCase().includes(keywordJadwal)) {
+                    logJadwalHTML += `
+                        <div class="bg-gray-900 border border-white/5 rounded-xl p-3 animate-item flex flex-col space-y-2 cursor-pointer btn-interaktif"
+                             oncontextmenu="return false;" ontouchstart="mulaisentuh('${j.id}', 'jadwal')" ontouchend="stopsentuh()" onclick="toggleDetailSuratJadwal('${j.id}')">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center rounded-xl shadow-lg shrink-0 text-xs">
+                                    ${dapetIkonUnik(j.nama)}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-xs font-black text-gray-100 truncate">${j.nama}</h4>
+                                    <p class="text-[10px] text-blue-400 font-medium mt-0.5"><i class="far fa-clock mr-1"></i> ${j.waktu}</p>
+                                </div>
+                                <span class="text-[9px] bg-white/5 border border-white/10 text-gray-400 px-2 py-1 rounded-md font-bold">Lihat</span>
+                            </div>
+                            <div id="surat-box-${j.id}" class="hidden bg-black/60 border border-white/5 p-3 rounded-lg text-left mt-1">
+                                <p class="text-[9px] uppercase text-amber-400 tracking-wider font-extrabold mb-1">Isi Surat / Pengumuman:</p>
+                                <p class="text-xs text-gray-300 leading-relaxed italic">"${j.deskripsi}"</p>
+                            </div>
+                        </div>`;
+                }
+            });
+            document.getElementById('listJadwalContainer').innerHTML = logJadwalHTML || `<p class="text-xs text-center text-gray-500 py-4">Jadwal tidak ditemukan.</p>`;
+
+            // 3. Render & Filter Shop UMKM
+            let logShopHTML = "";
+            databaseShop.forEach(s => {
+                const isMilikSendiri = s.pemilikToken === deviceTokenId;
+                let gambarProduk = s.gambar || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500";
+                
+                if(s.nama.toLowerCase().includes(keywordShop) || s.deskripsi.toLowerCase().includes(keywordShop)) {
+                    // Penambahan Event Listener gesture long-press ontouchstart pada item grid shop
+                    logShopHTML += `
+                        <div class="bg-slate-900 border border-white/10 rounded-xl overflow-hidden shadow-lg flex flex-col justify-between animate-item btn-interaktif cursor-pointer"
+                             oncontextmenu="return false;" ontouchstart="mulaisentuh('${s.id}', 'shop', '${s.pemilikToken}')" ontouchend="stopsentuh()" onclick="bukaDetailProdukModal('${s.id}')">
+                            
+                            <!-- Foto Dagangan -->
+                            <div class="w-full aspect-square overflow-hidden bg-gray-900 relative">
+                                <img src="${gambarProduk}" alt="Produk" class="w-full h-full object-cover">
+                                ${isMilikSendiri ? '<span class="absolute top-1 left-1 text-[8px] bg-orange-500 text-black px-1.5 py-0.5 font-black rounded-md shadow">Milik Anda</span>' : ''}
+                            </div>
+
+                            <!-- Info Judul & Harga Kecil -->
+                            <div class="p-2 flex flex-col justify-between text-left bg-slate-900/60 backdrop-blur-sm">
+                                <h4 class="text-[11px] font-bold text-gray-200 line-clamp-1 leading-tight">${s.nama}</h4>
+                                <p class="text-[10px] font-extrabold text-orange-400 mt-0.5">${s.harga}</p>
+                            </div>
+                        </div>`;
+                }
+            });
+            document.getElementById('listShopContainer').innerHTML = logShopHTML || `<p class="text-xs text-center text-gray-500 col-span-2 py-6">Produk tidak ditemukan.</p>`;
+
+            // 4. Render & Filter Kotak Saran
+            let logSaranHTML = "";
+            databaseSaran = databaseSaran.filter(sr => (waktuSekarang - sr.waktuDibuat) < batas30Hari || sr.status === 'Diurus');
+            
+            databaseSaran.forEach(sr => {
+                const isMilikSendiri = sr.pemilikToken === deviceTokenId;
+                const sudahDiurus = sr.status === "Diurus";
+                
+                if(sr.nama.toLowerCase().includes(keywordSaran) || sr.teks.toLowerCase().includes(keywordSaran) || (sr.alamat && sr.alamat.toLowerCase().includes(keywordSaran))) {
+                    logSaranHTML += `
+                        <div class="p-3 ${isMilikSendiri ? 'bg-purple-500/10 border-purple-500/30' : 'bg-gray-900 border-white/5'} rounded-xl border space-y-1.5 animate-item btn-interaktif cursor-pointer"
+                             oncontextmenu="return false;" ontouchstart="mulaisentuh('${sr.id}', 'saran', '${sr.pemilikToken}')" ontouchend="stopsentuh()">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="text-[10px] font-bold text-purple-400">${sr.nama}</span>
+                                    ${isMilikSendiri ? '<span class="text-[8px] bg-purple-500 text-black px-1.5 font-bold rounded-full">Milik Anda</span>' : ''}
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-[9px] text-gray-500">${sr.alamat || 'RT'}</span>
+                                    ${sudahDiurus ? '<span class="text-[8px] bg-emerald-500 text-black font-extrabold px-1.5 rounded-md">Diurus</span>' : '<span class="text-[8px] bg-amber-500/20 text-amber-400 font-medium px-1.5 rounded-md">Menunggu</span>'}
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-200">${sr.teks}</p>
+                            ${isPengurus && !sudahDiurus ? `<button onclick="tandaiSaranDiurus('${sr.id}')" class="mt-1 bg-emerald-500 text-black text-[9px] font-black px-2 py-0.5 rounded cursor-pointer">Tandai Diurus</button>` : ''}
+                        </div>`;
+                }
+            });
+            document.getElementById('feedSaranThreads').innerHTML = logSaranHTML || `<p class="text-xs text-center text-gray-500 py-6">Aspirasi tidak ditemukan.</p>`;
+        }
+
+        // --- SISTEM GESTURE TEKAN LAMA ---
+        let penandaWaktuSentuh;
+        function mulaisentuh(id, tipe, pemilikTokenId) {
+            const isPengurus = sessionUser && sessionUser.role === 'pengurus';
+            const isMilikSendiri = pemilikTokenId === deviceTokenId;
+
+            if (tipe === 'kas' || tipe === 'jadwal') {
+                if (!isPengurus) return;
+                penandaWaktuSentuh = setTimeout(() => { eksekusiKelolaMenuAksi(id, tipe, true); }, 800);
+                return;
+            }
+
+            if (isMilikSendiri || isPengurus) {
+                penandaWaktuSentuh = setTimeout(() => { eksekusiKelolaMenuAksi(id, tipe, isPengurus, isMilikSendiri); }, 800);
+            }
+        }
+        function stopsentuh() { clearTimeout(penandaWaktuSentuh); }
+
+        function eksekusiKelolaMenuAksi(id, tipe, isPengurus, isMilikSendiri) {
+            if (isMilikSendiri && (tipe === 'shop' || tipe === 'saran')) {
+                let opsi = prompt("MENU PEMILIK:\nKetik 'EDIT' untuk mengubah isi data\nKetik 'HAPUS' untuk membuang selamanya").trim().toUpperCase();
+                
+                if (opsi === 'HAPUS') {
+                    eksekusiHapusDataSecaraFisik(id, tipe);
+                } else if (opsi === 'EDIT') {
+                    let isiBaru = prompt("Masukkan revisi nama/teks baru Anda:");
+                    if (isiBaru && isiBaru.trim() !== "") {
+                        if (tipe === 'shop') {
+                            databaseShop = databaseShop.map(x => { if(x.id == id) x.nama = isiBaru; return x; });
+                            localStorage.setItem('andra_shop', JSON.stringify(databaseShop));
+                        } else if (tipe === 'saran') {
+                            databaseSaran = databaseSaran.map(x => { if(x.id == id) { x.teks = isiBaru; x.waktuDibuat = Date.now(); x.status = "Pending"; } return x; });
+                            localStorage.setItem('andra_saran', JSON.stringify(databaseSaran));
+                        }
+                        cetakNotifikasi("Pesan Anda Berhasil diperbarui!", "sukses");
+                        renderSemuaData();
+                    }
+                }
+                return;
+            }
+
+            if (isPengurus) {
+                let konfirmasi = confirm("MODERATOR PANEL (PENGURUS):\nApakah Anda ingin menghapus paksa pesan ini?");
+                if (konfirmasi) { eksekusiHapusDataSecaraFisik(id, tipe); }
+            }
+        }
+
+        function eksekusiHapusDataSecaraFisik(id, tipe) {
+            if(tipe === 'kas') databaseKas = databaseKas.filter(x => x.id != id);
+            if(tipe === 'jadwal') databaseJadwal = databaseJadwal.filter(x => x.id != id);
+            if(tipe === 'shop') databaseShop = databaseShop.filter(x => x.id != id);
+            if(tipe === 'saran') databaseSaran = databaseSaran.filter(x => x.id != id);
+
+            localStorage.setItem('andra_kas', JSON.stringify(databaseKas));
+            localStorage.setItem('andra_jadwal', JSON.stringify(databaseJadwal));
+            localStorage.setItem('andra_shop', JSON.stringify(databaseShop));
+            localStorage.setItem('andra_saran', JSON.stringify(databaseSaran));
+
+            cetakNotifikasi("Data sukses dibersihkan!", "sukses");
+            renderSemuaData();
+        }
+
+        window.onload = function() { 
+            let simpananSesi = localStorage.getItem('andra_session');
+            if(simpananSesi) {
+                sessionUser = JSON.parse(simpananSesi);
+                document.getElementById('loginBtn').innerHTML = '<i class="fas fa-sign-out-alt mr-1"></i> Keluar';
+                document.getElementById('txtStatusLogin').innerHTML = `Akun: <strong class="text-emerald-400 uppercase">${sessionUser.role}</strong>`;
+                if(sessionUser.role === 'pengurus') {
+                    document.getElementById('boxKelolaFoto').classList.remove('hidden');
+                    document.getElementById('btnToggleKelola').classList.remove('hidden');
+                    document.getElementById('boxInputJadwal').classList.remove('hidden');
+                    document.getElementById('tipsAksiKas').classList.remove('hidden');
+                    document.getElementById('tipsAksiJadwal').classList.remove('hidden');
+                }
+            }
+            updateTampilanSlider(); mulaiSliderOtomatis(); renderSemuaData(); 
+        };
+    </script>
+</body>
+</html>
